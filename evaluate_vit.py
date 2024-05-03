@@ -13,6 +13,7 @@ from tqdm import tqdm
 from process_data_from_csv import read_data_from_csv
 from dataset import MURADataset
 from csv_utils import *
+from vit_models.modeling import VisionTransformer, CONFIGS
 
 
 def plot_training_history(epoch_loss_history, epoch_acc_history):
@@ -65,6 +66,8 @@ def test_model(model, valid_loader, device, model_folder, model_name):
             labels = labels.to(device)
 
             outputs = model(inputs)
+            if isinstance(outputs, tuple):
+                outputs = outputs[0]
             # _, preds = torch.max(outputs, 1)  # crossentropy loss
             # print(outputs)
             # preds = torch.sigmoid(outputs).round()  # BCE loss
@@ -112,7 +115,7 @@ def test_model(model, valid_loader, device, model_folder, model_name):
     for part, metrics in body_part_metrics.items():
         metrics_data.append([part, metrics['sensitivity'], metrics['specificity'], metrics['accuracy']])
 
-    metrics_data.append(['Overall', round(overall_sensitivity, 2), round(overall_specificity, 2), round(overall_accuracy, 2)])
+    metrics_data.append(['Overall', round(overall_sensitivity, 3), round(overall_specificity, 3), round(overall_accuracy, 3)])
 
     metrics_data.append(['fpr', 'tpr', 'thresholds', 'roc_auc'])
 
@@ -125,11 +128,11 @@ def test_model(model, valid_loader, device, model_folder, model_name):
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    SAVE_PATH = './Models/Model_Architectures_Weighted_BCE_Adam/'
-    batch_size = 128
+    SAVE_PATH = './Models/Model_Architectures_ViT/'
+    batch_size = 64
 
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize((320, 320)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
@@ -141,47 +144,30 @@ if __name__ == '__main__':
 
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers = 10)
 
-    models_list = [models.densenet169, models.resnet152, models.vit_b_16]
-    # models_list = [models.densenet169]
+    config = CONFIGS['R50-ViT-B_16'] # "R50-ViT-B_16"
+    num_classes = 1
+    model_name = 'R50-ViT-B_16_4'
+    model = VisionTransformer(config, 320, zero_head=True, num_classes=num_classes)
 
-    for model_fn in models_list:
-        model_name = model_fn.__name__
-        model = model_fn(pretrained=False)
-        # vision transformer
-        if 'swin' in model_name:
-            num_features = model.head.in_features
-            model.head = nn.Linear(num_features, 1)
-        if 'vit' in model_name:
-            num_features = model.heads.head.in_features
-            model.heads.head = nn.Linear(num_features, 1)
-        # densenet
-        if 'densenet' in model_name:
-            num_features = model.classifier.in_features
-            model.classifier = nn.Linear(num_features, 1)
-        # resnet
-        if 'resnet' in model_name:
-            num_features = model.fc.in_features
-            model.fc = nn.Linear(num_features, 1)
+    model_folder = os.path.join(SAVE_PATH, model_name)
 
-        model_folder = os.path.join(SAVE_PATH, model_name)
+    best_model_file = None
+    for file in os.listdir(model_folder):
+        if 'best' in file and file.endswith('.pth'):
+            best_model_file = file
+            break
 
-        best_model_file = None
-        for file in os.listdir(model_folder):
-            if 'best' in file and file.endswith('.pth'):
-                best_model_file = file
-                break
+    if best_model_file is None:
+        raise FileNotFoundError(f"No best model found in {model_folder}")
+    
+    model_path = os.path.join(model_folder, best_model_file)
+    model.load_state_dict(torch.load(model_path))
+    model.to(device)
 
-        if best_model_file is None:
-            raise FileNotFoundError(f"No best model found in {model_folder}")
-        
-        model_path = os.path.join(model_folder, best_model_file)
-        model.load_state_dict(torch.load(model_path))
-        model.to(device)
-
-        metrics_data = test_model(model, test_loader, device, model_folder, model_name)
-        print(f'Evaluation for {model_name}:')
-        print(metrics_data)
-        model_results_path = os.path.join(model_folder, 'test_results.csv')
-        save_validation_to_csv(metrics_data, model_results_path)
+    metrics_data = test_model(model, test_loader, device, model_folder, model_name)
+    print(f'Evaluation for {model_name}:')
+    print(metrics_data)
+    model_results_path = os.path.join(model_folder, 'test_results.csv')
+    save_validation_to_csv(metrics_data, model_results_path)
 
     print("Evaluation of all models completed.")
