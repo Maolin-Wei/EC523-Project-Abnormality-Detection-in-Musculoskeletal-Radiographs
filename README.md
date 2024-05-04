@@ -7,6 +7,10 @@ Our task is to develop an automated abnormality detection system for musculoskel
 
 ![Task](https://github.com/Maolin-Wei/EC523-Project-Abnormality-Detection-in-Musculoskeletal-Radiographs/assets/144057115/e8cc2835-149a-4aac-ae67-93296b2317bd)
 
+## Model Architecture
+![image](https://github.com/Maolin-Wei/EC523-Project-Abnormality-Detection-in-Musculoskeletal-Radiographs/assets/144057115/4b88dfd0-37fe-4ec4-ab2b-af816fdc1e44)
+
+
 ## Installation
 1. Create a virtual environment `conda create -n [env_name] python=3.10` and activate it `conda activate [env_name]`
 2. Install [Pytorch](https://pytorch.org/get-started/locally/)
@@ -53,6 +57,8 @@ python get_CAM.py
 ```bash
 python visualize_attention_map.py
 ```
+
+![image](https://github.com/Maolin-Wei/EC523-Project-Abnormality-Detection-in-Musculoskeletal-Radiographs/assets/144057115/9641ead1-e27e-4219-981a-0d497a832d68)
 
 ## Acknowledgements
 - We appreciate the Stanford ML Group for their proposed [MURA dataset](https://stanfordmlgroup.github.io/competitions/mura/)
