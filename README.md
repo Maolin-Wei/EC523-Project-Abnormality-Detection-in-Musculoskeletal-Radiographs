@@ -23,7 +23,7 @@ Download it and put in the root folder, e.g. ./MURA-v1.1/
 
 ## Training
 
-The dataset is divided into training, testing, and validation sets following an 80/10/10 split.
+The dataset is divided into training, testing, and validation sets following an 8:1:1 split.
 
 **Train with the ResNet, DenseNet, etc. models**
 ```bash
