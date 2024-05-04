@@ -14,29 +14,6 @@ from process_data_from_csv import read_data_from_csv
 from dataset import MURADataset
 from csv_utils import *
 
-
-def plot_training_history(epoch_loss_history, epoch_acc_history):
-    plt.figure(figsize=(12, 5))
-
-    plt.subplot(1, 2, 1)
-    plt.plot(epoch_loss_history, label='Loss')
-    plt.title('Loss vs. Epoch')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.xticks(range(len(epoch_loss_history)))
-    plt.legend()
-
-    plt.subplot(1, 2, 2)
-    print('epoch_acc_history:', epoch_acc_history)
-    plt.plot(epoch_acc_history, label='Accuracy')
-
-    plt.title('Accuracy vs. Epoch')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.xticks(range(len(epoch_acc_history)))
-    plt.legend()
-
-    plt.show()
     
 def plot_roc_curve(fpr, tpr, roc_auc, model_folder, model_name):
     plt.figure()
